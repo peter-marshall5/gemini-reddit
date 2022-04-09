@@ -1,0 +1,4 @@
+###%T
+=> %L u/%U posted on r/%R (%V) %D
+%A (%C replies) %E
+%B

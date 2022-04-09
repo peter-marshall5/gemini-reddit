@@ -1,0 +1,5 @@
+=> %L Return to post
+
+=> %I u/%F replied to post (%H) %G
+%A (%C replies) %E
+%B

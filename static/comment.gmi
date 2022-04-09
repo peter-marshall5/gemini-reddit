@@ -1,0 +1,5 @@
+=> %L Return to previous comment
+
+=> %I u/%F replied to a comment (%H) %G
+%A (%C replies) %E
+%B
