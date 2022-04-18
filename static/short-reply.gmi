@@ -1,4 +1,4 @@
-=> [u/%U replied to u/%O on r/%R %D](%L)
-###%T
+=> %L %V Reply from u/%F (%H) %G
+### %T
 %B
 %A (%C replied) %E

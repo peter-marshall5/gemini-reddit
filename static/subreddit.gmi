@@ -1,1 +1,1 @@
-##Showing posts for %R (%M members / %A online)
+## Showing posts for %R (%M members / %A online)

@@ -1,5 +1,5 @@
 => /r/%R Return to r/%R
-###%T
+### %T
 => %L u/%U posted on r/%R (%V) %D
 %A (%C replies) %E
 %B

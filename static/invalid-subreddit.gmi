@@ -1,2 +1,2 @@
-##The subreddit r/%R does not exist yet.
+## The subreddit r/%R does not exist yet.
 (Be the first one to create it!)
