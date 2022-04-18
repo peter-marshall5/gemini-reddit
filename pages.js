@@ -123,21 +123,26 @@ async function formatReplyToReply (comment, replies, parent) {
 
 const maxReplies = 30
 
-function formatReplies (comments) {
-  let t = []
+function formatReplies (comments, level) {
+  if (comments.length < 1) return ''
+  if (!level) level = 0
+  let t = ''
   for (let i = 0; i < Math.min(comments.length, maxReplies); i++) {
     const comment = comments[i]
-    t.push(format.text('static/replies.gmi')
+    t += format.text('static/replies.gmi')
     .replace('%G', format.date(comment.created_utc))
     .replace('%H', format.votes(comment.ups, comment.downs))
     .replace('%A', formatAwards(comment.all_awardings))
     .replace('%C', format.number(comment.replies.length))
     .replace('%E', format.edited(comment.edited))
+    .replace('%V', format.level(level))
     .replace('%F', comment.author.name)
     .replace('%L', format.page(comment))
-    .replace('%B', format.reply(comment, true)))
+    .replace('%B', format.reply(comment, true))
+     + formatReplies(comments[i].replies, level + 1)
+     + (level == 0 ? '\n\n' : '')
   }
-  return format.list(t)
+  return t
 }
 
 function subreddit (name) {
@@ -148,7 +153,7 @@ function subreddit (name) {
       t.push(formatPosts(posts[i]))
     }
     return format.text('static/subreddit.gmi')
-    .replace('%R', name)
+    .replace('%R', await subreddit.display_name_prefixed)
     .replace('%M', format.number(await subreddit.subscribers))
     .replace('%A', format.number(await subreddit.active_user_count))
      + '\n' + format.list(t)
@@ -197,7 +202,7 @@ function reply (id, cid) {
     const comment = s.getComment(cid)
     return Promise.all([
       comment.fetch(),
-      comment.replies.fetchMore({amount: 10, skipReplies: true})
+      comment.replies.fetchMore({amount: 20, skipReplies: false})
     ]).then((stuff) => {
       if (stuff[0].parent_id.startsWith('t1')) {
         return formatReplyToReply(stuff[0], stuff[1])

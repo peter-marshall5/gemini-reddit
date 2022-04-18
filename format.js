@@ -89,6 +89,20 @@ function formatNumber (num) {
   return num
 }
 
+const levels = ['🟥', '🟦', '🟧', '🟩', '🟪', '🟫']
+
+// function formatLevel (level) {
+//   return levels[level % levels.length]
+// }
+
+function formatLevel (level) {
+  let r = ''
+  for (let i = 0; i < level; i++) {
+    r += '+'
+  }
+  return r
+}
+
 module.exports = {
   link: formatLink,
   date: formatDate,
@@ -102,5 +116,6 @@ module.exports = {
   reply: formatReply,
   votes: formatVotes,
   page: pageLink,
-  number: formatNumber
+  number: formatNumber,
+  level: formatLevel
 }
