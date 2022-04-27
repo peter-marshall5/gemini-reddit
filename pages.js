@@ -1,6 +1,6 @@
 // Formatting for reddit-specific elements
 
-const reddit = require('./reddit.js')
+//const reddit = require('./reddit.js')
 const format = require('./format.js')
 const fs = require('fs')
 
@@ -145,8 +145,8 @@ function formatReplies (comments, level) {
   return t
 }
 
-function subreddit (name) {
-  return reddit.getSession().then((s) => {return s.getSubreddit(name)}).then(async (subreddit) => {
+function subreddit (name, session) {
+  return session.then((s) => {return s.getSubreddit(name)}).then(async (subreddit) => {
     const posts = await subreddit.getHot()
     let t = []
     for (let i = 0; i < posts.length; i++) {
@@ -160,8 +160,8 @@ function subreddit (name) {
   })
 }
 
-function homepage () {
-  return reddit.getSession().then((s) => {return s.getHot()}).then(async (posts) => {
+function homepage (session) {
+  return session.then((s) => {return s.getHot()}).then(async (posts) => {
     // console.log(posts)
     let t = []
     for (let i = 0; i < posts.length; i++) {
@@ -172,8 +172,8 @@ function homepage () {
   })
 }
 
-function user (name) {
-  return reddit.getSession().then((s) => {return s.getUser(name)}).then(async (user) => {
+function user (name, session) {
+  return session.then((s) => {return s.getUser(name)}).then(async (user) => {
     const posts = await user.getOverview()
     let t = []
     for (let i = 0; i < posts.length; i++) {
@@ -190,14 +190,14 @@ function user (name) {
   })
 }
 
-function submission (id) {
-  return reddit.getSession()
+function submission (id, session) {
+  return session
   .then((s) => {return s.getSubmission(id).fetch()})
   .then(formatPost)
 }
 
-function reply (id, cid) {
-  return reddit.getSession()
+function reply (id, cid, session) {
+  return session
   .then((s) => {
     const comment = s.getComment(cid)
     return Promise.all([
@@ -233,6 +233,3 @@ module.exports = {
   homepage: homepage,
   error: handleError
 }
-
-// reddit.getSession().then(console.log)
-// console.log(reddit.getSession().then((s) => {return s.getSubreddit(name).getHot()}))
