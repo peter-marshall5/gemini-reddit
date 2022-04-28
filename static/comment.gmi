@@ -1,6 +1,6 @@
 => %L Return to previous comment
 
 => %I u/%F replied to a comment (%H) %G
-=> %J Actions
+=> %J Vote / Reply / Award / Report
 %A (%C replies) %E
 %B

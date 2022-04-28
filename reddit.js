@@ -110,9 +110,31 @@ function loginUrl (fingerprint) {
   return fs.readFileSync('static/auth-required.gmi').toString().replace('%L', 'https://www.reddit.com/api/v1/authorize?client_id=' + clientId + '&response_type=code&state=' + escape(fingerprint) + '&redirect_uri=' + redirectUri + '&duration=permanent&scope=' + permissions.join(','))
 }
 
+function vote (isComment, voteType, id, session) {
+  return session
+  .then((s) => {
+    if (isComment) {
+      return s.getComment(id)
+    }
+    return s.getSubmission(id)
+  })
+  .then((content) => {
+    if (voteType == true) {
+      return content.upvote()
+    }
+    if (voteType == null) {
+      return content.unvote()
+    }
+    if (voteType == false) {
+      return content.downvote()
+    }
+  })
+}
+
 module.exports = {
   getSession: getSession,
   createSession: createSession,
   loginUrl: loginUrl,
-  sessionExists: sessionExists
+  sessionExists: sessionExists,
+  vote: vote
 }

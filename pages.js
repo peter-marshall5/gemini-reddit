@@ -46,7 +46,7 @@ function formatPosts (post) {
   // console.log(post)
   return format.text('static/posts.gmi')
   .replace('%D', format.date(post.created_utc))
-  .replace('%V', format.votes(post.ups, post.downs))
+  .replace('%V', format.votes(post.ups, post.downs, post.likes))
   .replace('%A', formatAwards(post.all_awardings))
   .replace('%C', format.number(post.num_comments))
   .replace('%E', format.edited(post.edited))
@@ -61,7 +61,7 @@ function formatPosts (post) {
 function formatShortReply (comment, short) {
   return format.text('static/short-reply.gmi')
   .replace('%D', format.date(comment.created_utc))
-  .replace('%V', format.votes(comment.ups, comment.downs))
+  .replace('%V', format.votes(comment.ups, comment.downs, comment.likes))
   .replace('%A', formatAwards(comment.all_awardings))
   .replace('%C', format.number(comment.num_comments))
   .replace('%E', format.edited(comment.edited))
@@ -89,7 +89,7 @@ async function formatReplyToSubmission (comment, replies, actionLink, parent) {
   // .replace('%D', format.date(parent.created_utc))
   // .replace('%V', format.votes(parent.ups, parent.downs))
   .replace('%G', format.date(comment.created_utc))
-  .replace('%H', format.votes(comment.ups, comment.downs))
+  .replace('%H', format.votes(comment.ups, comment.downs, comment.likes))
   .replace('%A', formatAwards(comment.all_awardings))
   .replace('%C', format.number(replies.length))
   .replace('%E', format.edited(comment.edited))
@@ -111,7 +111,7 @@ async function formatReplyToReply (comment, replies, actionLink, parent) {
   // .replace('%D', format.date(parent.created_utc))
   // .replace('%V', format.votes(parent.ups, parent.downs))
   .replace('%G', format.date(comment.created_utc))
-  .replace('%H', format.votes(comment.ups, comment.downs))
+  .replace('%H', format.votes(comment.ups, comment.downs, comment.likes))
   .replace('%A', formatAwards(comment.all_awardings))
   .replace('%C', format.number(comment.replies.length))
   .replace('%E', format.edited(comment.edited))
@@ -135,7 +135,7 @@ function formatReplies (comments, level) {
     const comment = comments[i]
     t += format.text('static/replies.gmi')
     .replace('%G', format.date(comment.created_utc))
-    .replace('%H', format.votes(comment.ups, comment.downs))
+    .replace('%H', format.votes(comment.ups, comment.downs, comment.likes))
     .replace('%A', formatAwards(comment.all_awardings))
     .replace('%C', format.number(comment.replies.length))
     .replace('%E', format.edited(comment.edited))
@@ -194,13 +194,13 @@ function user (name, session) {
   })
 }
 
-function submission (id, path, session) {
+function submission (id, session) {
   return session
   .then((s) => {return s.getSubmission(id).fetch()})
   .then((p) => formatPost(p, formatActionLink(false, id)))
 }
 
-function reply (cid, path, session) {
+function reply (cid, session) {
   return session
   .then((s) => {
     const comment = s.getComment(cid)
@@ -224,8 +224,40 @@ function formatActionLink (isComment, id) {
   return `/a/s/${id}/`
 }
 
-function actions (id) {
-  return fs.readFileSync('static/actions.gmi')
+function submissionActions (id, session) {
+  return session
+  .then((s) => {return s.getContentByIds([s.getSubmission(id)])})
+  .then(async (stuff) => {
+    const submission = stuff[0]
+    const like = await submission.likes
+    const status = (like == true ? ' (You upvoted this)' : '')
+    + (like == false ? ' (You downvoted this)' : '')
+    return fs.readFileSync('static/actions.gmi').toString()
+    .replace('%I', 'Post')
+    .replace('%S', status)
+    .replace('%T', await submission.author.name + ' (' + await submission.title + ')')
+  })
+}
+
+function commentActions (id, session) {
+  return session
+  .then((s) => {return s.getComment(id)})
+  .then(async (comment) => {
+    const like = await comment.likes
+    const status = (like == true ? ' (You upvoted this)' : '')
+    + (like == false ? ' (You downvoted this)' : '')
+    return fs.readFileSync('static/actions.gmi').toString()
+    .replace('%I', 'Comment')
+    .replace('%S', status)
+    //.replace('%T', 'u/' + await comment.author.name)
+  })
+}
+
+function actions (isComment, id, session) {
+  if (isComment) {
+    return commentActions(id, session)
+  }
+  return submissionActions(id, session)
 }
 
 function handleError (e, pathParts) {

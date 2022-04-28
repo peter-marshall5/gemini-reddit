@@ -1,4 +1,6 @@
-## Actions
+Actions for %I
+by u/%T
+%S
 
 => up Upvote
 => down Downvote

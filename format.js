@@ -73,9 +73,13 @@ function formatReply (comment, short) {
 }
 
 function formatVotes (upvotes, downvotes, like) {
+  if (like == true) {
+    return '[' + formatNumber(upvotes) + '⬆️] / ' + formatNumber(downvotes) + '⬇️'
+  }
+  if (like == false) {
+    return formatNumber(upvotes) + '⬆️ / [' + formatNumber(downvotes) + '⬇️]'
+  }
   return formatNumber(upvotes) + '⬆️ / ' + formatNumber(downvotes) + '⬇️'
-   + (like == true ? ' (You upvoted this)' : '')
-   + (like == false ? ' (You downvoted this)' : '')
 }
 
 function pageLink (thing) {
