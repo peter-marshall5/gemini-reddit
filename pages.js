@@ -25,14 +25,15 @@ function formatAwards (awards) {
   }
 }
 
-function formatPost (post) {
+function formatPost (post, actionLink) {
   // console.log(post)
   return format.text('static/post.gmi')
   .replace('%D', format.date(post.created_utc))
-  .replace('%V', format.votes(post.ups, post.downs))
+  .replace('%V', format.votes(post.ups, post.downs, post.likes))
   .replace('%A', formatAwards(post.all_awardings))
   .replace('%C', format.number(post.num_comments))
   .replace('%E', format.edited(post.edited))
+  .replace('%J', actionLink)
   .replace('%U', post.author.name)
   .replace(/%R/g, post.subreddit.display_name)
   .replace('%T', post.title)
@@ -60,6 +61,7 @@ function formatPosts (post) {
 function formatShortReply (comment, short) {
   return format.text('static/short-reply.gmi')
   .replace('%D', format.date(comment.created_utc))
+  .replace('%V', format.votes(comment.ups, comment.downs))
   .replace('%A', formatAwards(comment.all_awardings))
   .replace('%C', format.number(comment.num_comments))
   .replace('%E', format.edited(comment.edited))
@@ -81,7 +83,7 @@ function getParentPermalink (comment, toplevel) {
   + '/' + comment.parent_id.replace('t1_', '') + '/'
 }
 
-async function formatReplyToSubmission (comment, replies, parent) {
+async function formatReplyToSubmission (comment, replies, actionLink, parent) {
   // console.log(parent)
   return format.text('static/reply.gmi')
   // .replace('%D', format.date(parent.created_utc))
@@ -91,6 +93,7 @@ async function formatReplyToSubmission (comment, replies, parent) {
   .replace('%A', formatAwards(comment.all_awardings))
   .replace('%C', format.number(replies.length))
   .replace('%E', format.edited(comment.edited))
+  .replace('%J', actionLink)
   // .replace(/%U/g, parent.author.name)
   // .replace('%R', parent.subreddit.display_name)
   .replace('%F', comment.author.name)
@@ -102,7 +105,7 @@ async function formatReplyToSubmission (comment, replies, parent) {
   + '\n' + formatReplies(replies)
 }
 
-async function formatReplyToReply (comment, replies, parent) {
+async function formatReplyToReply (comment, replies, actionLink, parent) {
   // console.log(comment, comment.permalink.replace(/\/*\/$/, ''))
   return format.text('static/comment.gmi')
   // .replace('%D', format.date(parent.created_utc))
@@ -112,6 +115,7 @@ async function formatReplyToReply (comment, replies, parent) {
   .replace('%A', formatAwards(comment.all_awardings))
   .replace('%C', format.number(comment.replies.length))
   .replace('%E', format.edited(comment.edited))
+  .replace('%J', actionLink)
   // .replace(/%U/g, parent.author.name)
   // .replace('%R', parent.subreddit.display_name)
   .replace('%F', comment.author.name)
@@ -190,13 +194,13 @@ function user (name, session) {
   })
 }
 
-function submission (id, session) {
+function submission (id, path, session) {
   return session
   .then((s) => {return s.getSubmission(id).fetch()})
-  .then(formatPost)
+  .then((p) => formatPost(p, formatActionLink(false, id)))
 }
 
-function reply (id, cid, session) {
+function reply (cid, path, session) {
   return session
   .then((s) => {
     const comment = s.getComment(cid)
@@ -205,12 +209,23 @@ function reply (id, cid, session) {
       comment.replies.fetchMore({amount: 20, skipReplies: false})
     ]).then((stuff) => {
       if (stuff[0].parent_id.startsWith('t1')) {
-        return formatReplyToReply(stuff[0], stuff[1])
+        return formatReplyToReply(stuff[0], stuff[1], formatActionLink(true, cid))
       } else {
-        return formatReplyToSubmission(stuff[0], stuff[1])
+        return formatReplyToSubmission(stuff[0], stuff[1], formatActionLink(true, cid))
       }
     })
   })
+}
+
+function formatActionLink (isComment, id) {
+  if (isComment) {
+    return `/a/c/${id}/`
+  }
+  return `/a/s/${id}/`
+}
+
+function actions (id) {
+  return fs.readFileSync('static/actions.gmi')
 }
 
 function handleError (e, pathParts) {
@@ -220,7 +235,7 @@ function handleError (e, pathParts) {
   }
   // TODO: Report the error to a DB?
   // console.log(e)
-  return `An unknown error occurred.\n\n(${e.message})`
+  return `An unknown error occurred.\n\n\`\`\`\n${e.message}\n\`\`\``
 }
 
 module.exports = {
@@ -231,5 +246,6 @@ module.exports = {
   header: header,
   footer: footer,
   homepage: homepage,
+  actions: actions,
   error: handleError
 }

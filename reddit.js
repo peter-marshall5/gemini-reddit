@@ -5,11 +5,25 @@ const FormData = require('form-data')
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args))
 const fs = require('fs')
 
+const sessions = []
+let anonSession = null
+
 const clientId = 'qjuGunndIej__Of-o_FeKg'
 const clientSecret = 'VW5XGYniGFNCBW5_2pTEcf6HtecXcg'
 const redirectUri = 'http://localhost:8080/auth'
-const sessions = []
-let anonSession = null
+const permissions = [
+  'account',
+  'edit',
+  'flair',
+  'history',
+  'identity',
+  'privatemessages',
+  'read',
+  'save',
+  'submit',
+  'subscribe',
+  'vote'
+]
 
 function createAnonToken () {
   return fetch('https://www.reddit.com/api/v1/access_token', {
@@ -45,8 +59,8 @@ function getAnonSession () {
 }
 
 function getSession (id) {
-  if (id > -1 && sessions[id]) {
-    return sessions[id]
+  if (id && sessions[id]) {
+    return new Promise((r) => r(sessions[id]))
   } else {
     return getAnonSession()
   }
@@ -58,13 +72,13 @@ function sessionExists (id) {
 
 async function createSession (id, code) {
   id = unescape(id)
-  console.log(id)
   // Disallow double login
   if (sessions[id]) {
     return
   }
   // sessions[id] = null
-  // do token stuff
+
+  // Do token stuff
   let response = await fetch(`https://www.reddit.com/api/v1/access_token`,  {
     method: 'POST',
     body: 'grant_type=authorization_code&code=' + code + '&redirect_uri=' + redirectUri,
@@ -74,6 +88,7 @@ async function createSession (id, code) {
     }
   })
   let body = await response.json()
+
   if (body.error) {
     return
   }
@@ -81,6 +96,7 @@ async function createSession (id, code) {
   if (sessions[id]) {
     return
   }
+
   sessions[id] = new snoowrap({
     userAgent: 'Gemini proxy by petmshall',
     clientId: clientId,
@@ -91,13 +107,8 @@ async function createSession (id, code) {
 }
 
 function loginUrl (fingerprint) {
-  return fs.readFileSync('static/auth-required.gmi').toString().replace('%L', 'https://www.reddit.com/api/v1/authorize?client_id=' + clientId + '&response_type=code&state=' + escape(fingerprint) + '&redirect_uri=' + redirectUri + '&duration=permanent&scope=identity,submit,save')
+  return fs.readFileSync('static/auth-required.gmi').toString().replace('%L', 'https://www.reddit.com/api/v1/authorize?client_id=' + clientId + '&response_type=code&state=' + escape(fingerprint) + '&redirect_uri=' + redirectUri + '&duration=permanent&scope=' + permissions.join(','))
 }
-
-// getAnonSession().then((id) => {anonSession.getSubreddit('place').getHot().then(console.log)})
-// getAnonSession().then((id) => {anonSession.getSubmission('twb34n').author.name.then(console.log)})
-// getAnonSession().then((id) => {console.log(anonSession.getUser('589kfzm6').name)})
-// getAnonSession().then((id) => {anonSession.getSubmission('4a9u54').title.then(console.log)})
 
 module.exports = {
   getSession: getSession,

@@ -1,0 +1,6 @@
+## Actions
+
+=> up Upvote
+=> down Downvote
+=> unvote Remove vote
+=> reply Reply

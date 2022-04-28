@@ -31,12 +31,32 @@ app.on('*', function(req, res) {
     return res.data(reddit.loginUrl(req.fingerprint), mimeType='text/gemini')
   }
   if (pathParts[0] == 'a') {
-    console.log(req.fingerprint)
     if (!req.fingerprint) {
       return res.data(fs.readFileSync('static/auth-instructions.gmi'), mimeType='text/gemini')
     }
     if (pathParts[1] == 'info') {
-      res.data('# Info\nPublic key fingerprint: ' + req.fingerprint + '\n', mimeType='text/gemini')
+      res.data('# Info\nPublic key fingerprint: '
+       + req.fingerprint + '\n'
+       + (reddit.sessionExists(req.fingerprint) ? 'You are logged into Reddit' : '')
+      , mimeType='text/gemini')
+    }
+    if (pathParts[3] && pathParts[3] != '') {
+      if (pathParts[3] == 'up') {
+        // upvote
+        return res.data(pages.actions(pathParts[2]), mimeType='text/gemini')
+      }
+      if (pathParts[3] == 'down') {
+        // upvote
+      }
+      return
+    }
+    if (pathParts[1] == 'c') {
+      return res.data(pages.actions(pathParts[2]), mimeType='text/gemini')
+      //return doComment(pathParts[2], pathParts, session).then((t) => res.data(t, mimeType='text/gemini'))
+    }
+    if (pathParts[1] == 's') {
+      return res.data(pages.actions(pathParts[2]), mimeType='text/gemini')
+      //return doSubmission(pathParts[2], pathParts, session).then((t) => res.data(t, mimeType='text/gemini'))
     }
     return
   }
@@ -55,17 +75,23 @@ app.on('*', function(req, res) {
       .catch((e) => {res.data(pages.error(e, pathParts))})
     }
   } else if (pathParts.length > 6) {
-    // console.log(pathParts[3], pathParts[5])
-    return pages.reply(pathParts[3], pathParts[5], session)
-    .then((t) => {res.data(pages.header(pathParts[3]) + t + pages.footer(pathParts[3]), mimeType='text/gemini')})
-    .catch((e) => {res.data(pages.error(e, pathParts))})
+    return doComment(pathParts[5], pathParts, session).then((t) => res.data(t, mimeType='text/gemini'))
   } else if (pathParts.length > 4) {
-    // console.log(pathParts[3])
-    return pages.submission(pathParts[3], session)
-    .then((t) => {res.data(pages.header(pathParts[3]) + t + pages.footer(pathParts[3]), mimeType='text/gemini')})
-    .catch((e) => {res.data(pages.error(e, pathParts))})
+    return doSubmission(pathParts[3], pathParts, session).then((t) => res.data(t, mimeType='text/gemini'))
   }
 })
+
+function doComment (cid, pathParts, session) {
+  return pages.reply(cid, pathParts.join('/'), session)
+  .then((t) => pages.header(pathParts[3]) + t + pages.footer(pathParts[3]))
+  .catch((e) => pages.error(e, pathParts))
+}
+
+function doSubmission (id, pathParts, session) {
+  return pages.submission(id, pathParts.join('/'), session)
+  .then((t) => pages.header(pathParts[3]) + t + pages.footer(pathParts[3]))
+  .catch((e) => pages.error(e, pathParts))
+}
 
 app.listen()
 
@@ -85,6 +111,7 @@ http.createServer(function (req, res) {
       res.end()
       return
     }
+
     reddit.createSession(params.state, params.code)
     res.write('<script>//window.close()</script>\nOK - You can close this page now')
     res.end()
