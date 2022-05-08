@@ -9,8 +9,21 @@ function formatLink (text, loc) {
   return '=> ' + loc + ' ' + text
 }
 
+function padStr(i) {
+    return (i < 10) ? '0' + i : '' + i;
+}
+
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
 function formatDate (d) {
-  return '[DATE ' + d + ' UTC]'
+  const date = new Date(d * 1000)
+  return '['
+   + months[date.getMonth()] + ' '
+   + date.getDate() + ', '
+   + date.getFullYear() + ' at '
+   + date.getHours() + ':'
+   + date.getMinutes()
+   + ']'
 }
 
 function formatList (list) {
