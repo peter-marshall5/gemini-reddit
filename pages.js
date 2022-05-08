@@ -249,7 +249,7 @@ function commentActions (id, session) {
     return fs.readFileSync('static/actions.gmi').toString()
     .replace('%I', 'Comment')
     .replace('%S', status)
-    //.replace('%T', 'u/' + await comment.author.name)
+    .replace('%T', await comment.author.name)
   })
 }
 
