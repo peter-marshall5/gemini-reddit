@@ -85,12 +85,10 @@ function requestHandler (req, res) {
 
 function doComment (cid, pathParts, session) {
   return pages.reply(cid, session)
-  .then((t) => pages.header(pathParts[3]) + t + pages.footer(pathParts[3]))
 }
 
 function doSubmission (id, pathParts, session) {
   return pages.submission(id, session)
-  .then((t) => pages.header(pathParts[3]) + t + pages.footer(pathParts[3]))
 }
 
 app.on('*', function(req, res) {
